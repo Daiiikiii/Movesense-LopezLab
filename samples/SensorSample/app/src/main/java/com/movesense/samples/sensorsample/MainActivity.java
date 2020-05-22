@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Scanner;
 
 import io.reactivex.disposables.Disposable;
 
@@ -60,6 +62,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     // Data stock
     private ArrayList<AccDataResponse> accDataList;
+    private ArrayList<Long> currentTimeData;
+    private ArrayList<Long> timeData;
+    private long time;
+    private boolean isFirst;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +85,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         // Initialize Movesense MDS library
         initMds();
+
+        // time
+        time = 0l;
     }
 
     private RxBleClient getBleClient() {
@@ -188,6 +197,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void subscribeToSensor(String connectedSerial) {
         // Init list
         accDataList = new ArrayList<>();
+        timeData = new ArrayList<>();
+        currentTimeData = new ArrayList<>();
+        isFirst = true;
 
         // Clean up existing subscription (if there is one)
         if (mdsSubscription != null) {
@@ -220,10 +232,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     String.format("%.02f, %.02f, %.02f", accResponse.body.array[0].x, accResponse.body.array[0].y, accResponse.body.array[0].z);
 
                             ((TextView)findViewById(R.id.sensorMsg)).setText(accStr);
+
+                            if (isFirst){
+                                time = accResponse.body.timestamp;
+                                isFirst = false;
+                            }
                         }
 
                         // Stock sensor data
                         accDataList.add(accResponse);
+
+                        // Current time
+                        currentTimeData.add(System.currentTimeMillis());
+
+                        // Elapsed time
+                        timeData.add(accResponse.body.timestamp - time);
+
+
                     }
 
                     @Override
@@ -334,26 +359,28 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void writeDataToCsvFile() {
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_kkmmss");
-        String filename = "movesense_" + sdf.format(date) + ".csv";
-        try {
-            FileOutputStream fout = openFileOutput(filename, MODE_PRIVATE);
-            String comma = ",";
-            String newline = "\n";
-            fout.write("x,y,z,timestamp\n".getBytes());
-            for (int i = 0; i < accDataList.size(); i++) {
-                String row = (accDataList.get(i).body.array[0].x) + comma
-                        + (accDataList.get(i).body.array[0].y) + comma
-                        + (accDataList.get(i).body.array[0].z) + comma
-                        + (accDataList.get(i).body.timestamp) + newline;
-                fout.write(row.getBytes());
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_kkmmss");
+            String filename = "movesense_" + sdf.format(date) + ".csv";
+            try {
+                FileOutputStream fout = openFileOutput(filename, MODE_PRIVATE);
+                String comma = ",";
+                String newline = "\n";
+                fout.write("x,y,z,timestamp,LocalTime,ElapsedTime\n".getBytes());
+                for (int i = 0; i < accDataList.size(); i++) {
+                    String row = (accDataList.get(i).body.array[0].x) + comma
+                            + (accDataList.get(i).body.array[0].y) + comma
+                            + (accDataList.get(i).body.array[0].z) + comma
+                            + (accDataList.get(i).body.timestamp) + comma
+                            + (currentTimeData.get(i)) + comma
+                            + (timeData.get(i)) + newline;
+                    fout.write(row.getBytes());
+                }
+                fout.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            fout.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
