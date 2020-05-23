@@ -1,7 +1,6 @@
 package com.movesense.samples.sensorsample;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -12,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -21,7 +21,6 @@ import com.movesense.mds.Mds;
 import com.movesense.mds.MdsConnectionListener;
 import com.movesense.mds.MdsException;
 import com.movesense.mds.MdsNotificationListener;
-import com.movesense.mds.MdsResponseListener;
 import com.movesense.mds.MdsSubscription;
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleDevice;
@@ -33,7 +32,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Scanner;
 
 import io.reactivex.disposables.Disposable;
 
@@ -67,6 +65,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private long time;
     private boolean isFirst;
 
+
+    // id
+    private EditText editText;
+    private int id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,8 +89,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Initialize Movesense MDS library
         initMds();
 
-        // time
+        // time and ID
         time = 0l;
+        id = 0;
+        editText = (EditText) findViewById(R.id.id_Text);
+
+
     }
 
     private RxBleClient getBleClient() {
@@ -200,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         timeData = new ArrayList<>();
         currentTimeData = new ArrayList<>();
         isFirst = true;
+        id = Integer.parseInt(editText.getText().toString());
 
         // Clean up existing subscription (if there is one)
         if (mdsSubscription != null) {
@@ -361,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void writeDataToCsvFile() {
             Date date = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_kkmmss");
-            String filename = "movesense_" + sdf.format(date) + ".csv";
+            String filename = "movesense_" + String.format("%03d_", id) + sdf.format(date) + ".csv";
             try {
                 FileOutputStream fout = openFileOutput(filename, MODE_PRIVATE);
                 String comma = ",";
