@@ -29,25 +29,39 @@
             android:layout_margin="8dp"
             android:text="@string/instructions_text" />
 
-        <Button
-            android:id="@+id/buttonScan"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="onScanClicked"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:text="Scan"
-            android:visibility="visible" />
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/buttonScanStop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onScanStopClicked"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:text="Stop Scan"
-            android:visibility="gone" />
+            <Button
+                android:id="@+id/buttonScan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:onClick="onScanClicked"
+                android:text="Scan"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/buttonScanStop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:onClick="onScanStopClicked"
+                android:text="Stop Scan"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Status Text"
+                android:textSize="18sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/sensorUI"
@@ -62,8 +76,8 @@
                 android:id="@+id/buttonUnsubscribe"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Unsubscribe"
-                android:onClick="onUnsubscribeClicked" />
+                android:onClick="onUnsubscribeClicked"
+                android:text="Stop" />
 
 
             <TextView

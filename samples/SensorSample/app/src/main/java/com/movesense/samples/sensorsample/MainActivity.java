@@ -3,6 +3,7 @@ package com.movesense.samples.sensorsample;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -65,10 +66,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private long time;
     private boolean isFirst;
 
-
     // id
     private EditText editText;
     private int id;
+    // Status show components
+    private TextView statusText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +96,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         id = 0;
         editText = (EditText) findViewById(R.id.id_Text);
 
-
+        // set status text
+        statusText = (TextView)findViewById(R.id.statusText);
+        statusText.setText("Tap to scan.");
     }
 
     private RxBleClient getBleClient() {
@@ -127,7 +131,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     Disposable mScanSubscription;
+    private boolean isFound = false;
     public void onScanClicked(View view) {
+        statusText.setText("Scanning...");
+
         findViewById(R.id.buttonScan).setVisibility(View.GONE);
         findViewById(R.id.buttonScanStop).setVisibility(View.VISIBLE);
 
@@ -153,10 +160,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                                 // replace if exists already, add otherwise
                                 MyScanResult msr = new MyScanResult(scanResult);
-                                if (mScanResArrayList.contains(msr))
+                                if (mScanResArrayList.contains(msr)) {
+                                    if (!isFound) {
+                                        statusText.setText("Found a device!");
+                                        setTextDelay(statusText, 1500, "Tap to connect.");
+                                        isFound = true;
+                                    }
                                     mScanResArrayList.set(mScanResArrayList.indexOf(msr), msr);
-                                else
+                                }else {
                                     mScanResArrayList.add(0, msr);
+                                }
 
                                 mScanResArrayAdapter.notifyDataSetChanged();
                             }
@@ -172,6 +185,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void onScanStopClicked(View view) {
+        isFound = false;
+        statusText.setText("Stop scan.");
+        setTextDelay(statusText, 1500, "Tap to scan again.");
+
         if (mScanSubscription != null)
         {
             mScanSubscription.dispose();
@@ -202,6 +219,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void subscribeToSensor(String connectedSerial) {
+        statusText.setText("Start!");
+        setTextDelay(statusText, 1000, "Measuring...");
+
         // Init list
         accDataList = new ArrayList<>();
         timeData = new ArrayList<>();
@@ -283,10 +303,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Log.i(LOG_TAG, "Disconnecting from BLE device: " + device.macAddress);
         mMds.disconnect(device.macAddress);
 
+        statusText.setText("Disconnected!");
+        setTextDelay(statusText, 1500, "Tap to Connect again.");
         return true;
     }
 
     private void connectBLEDevice(MyScanResult device) {
+        statusText.setText("Connecting...");
+
         RxBleDevice bleDevice = getBleClient().getBleDevice(device.macAddress);
 
         Log.i(LOG_TAG, "Connecting to BLE device: " + bleDevice.getMacAddress());
@@ -299,6 +323,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             @Override
             public void onConnectionComplete(String macAddress, String serial) {
+                statusText.setText("Connected!");
+                setTextDelay(statusText, 1500, "Tap to start.");
                 for (MyScanResult sr : mScanResArrayList) {
                     if (sr.macAddress.equalsIgnoreCase(macAddress)) {
                         sr.markConnected(serial);
@@ -343,6 +369,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void unsubscribe() {
+        statusText.setText("Writing...");
+
         if (mdsSubscription != null) {
             mdsSubscription.unsubscribe();
             mdsSubscription = null;
@@ -355,10 +383,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if (sensorUI.getVisibility() != View.GONE)
             sensorUI.setVisibility(View.GONE);
 
+        final Handler handler = new Handler();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 writeDataToCsvFile();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusText.setText("Tap to start, or long tap to disconnect.");
+                    }
+                });
             }
         }).start();
     }
@@ -390,5 +425,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             } catch (IOException e) {
                 e.printStackTrace();
             }
+    }
+
+    private void setTextDelay(TextView textView, int delay, String text) {
+        final Handler handler = new Handler();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(delay);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.setText(text);
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }

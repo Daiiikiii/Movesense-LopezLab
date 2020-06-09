@@ -3,9 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SensorSample.iml" filepath="$PROJECT_DIR$/SensorSample.iml" group="SensorSample" />
-      <module fileurl="file://$PROJECT_DIR$/app/SensorSample-app.iml" filepath="$PROJECT_DIR$/app/SensorSample-app.iml" group="SensorSample/app" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="SensorSample/app" />
-      <module fileurl="file://$PROJECT_DIR$/samples-SensorSample.iml" filepath="$PROJECT_DIR$/samples-SensorSample.iml" group="SensorSample" />
     </modules>
   </component>
 </project>
